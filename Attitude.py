@@ -64,7 +64,7 @@ ser = serial.Serial(config.get('settings', 'com_port'), 9600)
 while True:
     output = ser.readline()
     print(output)
-    time.sleep(2)
+    time.sleep(0.01)
 
 #measurement = Data([900, 902, 0, 5, 880, 890, 950, 952, 1000, 1012, 20, 25])
 #print(measurement.sorted())
