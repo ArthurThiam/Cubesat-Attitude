@@ -56,9 +56,15 @@ class Data:
     def sorted(self):
         return {key: value for key, value in sorted(self.calibrated().items(), key=lambda item: item[1])}
 
-ser = serial.Serial('COM4', 9600)
-time.sleep(2)
-b = ser.readline()
+
+config = configparser.ConfigParser()
+config.read('calibration.ini')
+ser = serial.Serial(config.get('settings', 'com_port'), 9600)
+
+while True:
+    output = ser.readline()
+    print(output)
+    time.sleep(2)
 
 #measurement = Data([900, 902, 0, 5, 880, 890, 950, 952, 1000, 1012, 20, 25])
 #print(measurement.sorted())
