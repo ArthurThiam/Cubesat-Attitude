@@ -1,70 +1,56 @@
+from Classes import Data, Attitude
 import configparser
 import serial
 import time
 
-class Data:
 
-    def __init__(self, data):
-        self.data = data
+# Unit test
+def unit_test():
+    measurement = Data([900, 902, 0, 5, 880, 890, 950, 952, 1000, 1012, 20, 25])
 
-    # average sensor values
-    def averaged(self):
-        x_pos_avg = 0.5 * (self.data[10]+self.data[11])
-        x_neg_avg = 0.5 * (self.data[6]+self.data[7])
-        y_pos_avg = 0.5 * (self.data[2] + self.data[3])
-        y_neg_avg = 0.5 * (self.data[4] + self.data[5])
-        z_pos_avg = 0.5 * (self.data[8] + self.data[9])
-        z_neg_avg = 0.5 * (self.data[0] + self.data[1])
+    # Return the averaged, calibrated and sorted dominant values
+    sorted_data = measurement.sorted()
+    print('Dominant Side Proccessed Data: ', sorted_data)
 
-        avg_data = {
-            "x+": x_pos_avg,
-            "x-": x_neg_avg,
-            "y+": y_pos_avg,
-            "y-": y_neg_avg,
-            "z+": z_pos_avg,
-            "z-": z_neg_avg
-        }
-
-        return avg_data
-
-    def calibrated(self):
-        config = configparser.ConfigParser()
-        config.read('calibration.ini')
-
-        calibration_ranges = {
-            "x+": config.getint('settings', 'x_p_max') - config.getint('settings', 'x_p_min'),
-            "x-": config.getint('settings', 'x_n_max') - config.getint('settings', 'x_n_min'),
-
-            "y+": config.getint('settings', 'y_p_max') - config.getint('settings', 'y_p_min'),
-            "y-": config.getint('settings', 'y_n_max') - config.getint('settings', 'y_n_min'),
-
-            "z+": config.getint('settings', 'z_p_max') - config.getint('settings', 'z_p_min'),
-            "z-": config.getint('settings', 'z_n_max') - config.getint('settings', 'z_n_min')
-        }
-
-        calibrated_data = {
-            "x+": self.averaged()["x+"]*(1023/calibration_ranges["x+"]),
-            "x-": self.averaged()["x-"]*(1023/calibration_ranges["x-"]),
-            "y+": self.averaged()["y+"]*(1023/calibration_ranges["y+"]),
-            "y-": self.averaged()["y-"]*(1023/calibration_ranges["y-"]),
-            "z+": self.averaged()["z+"]*(1023/calibration_ranges["z+"]),
-            "z-": self.averaged()["z-"]*(1023/calibration_ranges["z-"])
-        }
-
-        return calibrated_data
-
-    def sorted(self):
-        return {key: value for key, value in sorted(self.calibrated().items(), key=lambda item: item[1])}
+    # Return incidence angles for the three dominant sides
+    incidence_data = Attitude(sorted_data).incidence_angles()
+    print('Dominant Side Incidence Angles: ', incidence_data)
 
 
+# Communicate with serial port
 config = configparser.ConfigParser()
 config.read('calibration.ini')
 ser = serial.Serial(config.get('settings', 'com_port'), 9600)
 
-while True:
-    output = ser.readline()
-    print(output)
+running = True
+listening = True
+
+while running:
+    while listening:
+        output = ser.readline()
+        if output == b',\r\n':
+            listening = False
+
+    A0 = int(ser.readline())
+    A1 = int(ser.readline())
+    A2 = int(ser.readline())
+    A3 = int(ser.readline())
+    A4 = int(ser.readline())
+    A5 = int(ser.readline())
+    A6 = int(ser.readline())
+    A7 = int(ser.readline())
+    A8 = int(ser.readline())
+    A9 = int(ser.readline())
+    A10 = int(ser.readline())
+    A11 = int(ser.readline())
+
+    raw_data = [A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11]
+    measurement = Data(raw_data)
+    sorted_data = measurement.sorted()
+    incidence_data = Attitude(sorted_data).incidence_angles()
+    print('Dominant incidence angles: ', incidence_data)
+
+
+    listening = True
     time.sleep(0.01)
 
-#measurement = Data([900, 902, 0, 5, 880, 890, 950, 952, 1000, 1012, 20, 25])
-#print(measurement.sorted())
