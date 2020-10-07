@@ -24,6 +24,9 @@ ser = serial.Serial(config.get('settings', 'com_port'), 9600)
 
 running = True
 listening = True
+counter = 0
+moving_average_period = 10
+stored_data = []
 
 # While attitude determination is required
 while running:
@@ -58,10 +61,41 @@ while running:
     sorted_data = measurement.sorted()
 
     # Request incidence angle by instantiating Attitude class
-    incidence_data = Attitude(sorted_data).incidence_angles()
-    print('Dominant incidence angles: ', incidence_data)
+    sun_vector = Attitude(sorted_data).unit_vector()
+
+    # Add data to temporary storage and move counter
+    counter += 1
+
+    if len(stored_data) < moving_average_period:
+        stored_data.append(sun_vector)
+
+    elif len(stored_data) >= moving_average_period:
+        stored_data.pop(0)                  # remove oldest value
+        stored_data.append(sun_vector)      # add newest value
+
+    # if counter is not yet above threshold, use singular value
+    if counter < moving_average_period:
+        averaged_sun_vector = stored_data[-1]
+
+    # if counter is above threshold, apply moving average
+    elif counter >= moving_average_period:
+        summed_data = [0, 0, 0]
+
+        # Sum all of the parameters and store them in summed_data
+        for i in stored_data:
+            summed_data[0] += i[0]
+            summed_data[1] += i[1]
+            summed_data[2] += i[2]
+
+        # Add averages to the averaged sun vector
+        averaged_sun_vector = [(summed_data[0] / 10),
+                               (summed_data[1] / 10),
+                               (summed_data[2] / 10)
+                               ]
+
+    print('Dominant incidence angles: ', averaged_sun_vector)
     print('')
 
     listening = True
-    time.sleep(1)
+    time.sleep(0.5)
 
