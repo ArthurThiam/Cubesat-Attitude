@@ -8,61 +8,83 @@ class Data:
         self.data = data
 
     # Read range calibration data
-    def ranges(self):
+    @staticmethod
+    def calibration():
         config = configparser.ConfigParser()
         config.read('calibration.ini')
 
         ranges = {
-            "x+": config.getint('settings', 'x_p_max') - config.getint('settings', 'x_p_min'),
-            "x-": config.getint('settings', 'x_n_max') - config.getint('settings', 'x_n_min'),
-
-            "y+": config.getint('settings', 'y_p_max') - config.getint('settings', 'y_p_min'),
-            "y-": config.getint('settings', 'y_n_max') - config.getint('settings', 'y_n_min'),
-
-            "z+": config.getint('settings', 'z_p_max') - config.getint('settings', 'z_p_min'),
-            "z-": config.getint('settings', 'z_n_max') - config.getint('settings', 'z_n_min')
+            "A0": config.getint('settings', 'A0_max') - config.getint('settings', 'A0_min'),
+            "A1": config.getint('settings', 'A1_max') - config.getint('settings', 'A1_min'),
+            "A2": config.getint('settings', 'A2_max') - config.getint('settings', 'A2_min'),
+            "A3": config.getint('settings', 'A3_max') - config.getint('settings', 'A3_min'),
+            "A4": config.getint('settings', 'A4_max') - config.getint('settings', 'A4_min'),
+            "A5": config.getint('settings', 'A5_max') - config.getint('settings', 'A5_min'),
+            "A6": config.getint('settings', 'A6_max') - config.getint('settings', 'A6_min'),
+            "A7": config.getint('settings', 'A7_max') - config.getint('settings', 'A7_min'),
+            "A8": config.getint('settings', 'A8_max') - config.getint('settings', 'A8_min'),
+            "A9": config.getint('settings', 'A9_max') - config.getint('settings', 'A9_min'),
+            "A10": config.getint('settings', 'A10_max') - config.getint('settings', 'A10_min'),
+            "A11": config.getint('settings', 'A11_max') - config.getint('settings', 'A11_min')
         }
-
-        return ranges
-
-    # average sensor values and associate to correct face
-    def averaged(self):
-        x_pos_avg = 0.5 * (self.data[10] + self.data[11])
-        x_neg_avg = 0.5 * (self.data[6] + self.data[7])
-        y_pos_avg = 0.5 * (self.data[2] + self.data[3])
-        y_neg_avg = 0.5 * (self.data[4] + self.data[5])
-        z_pos_avg = 0.5 * (self.data[8] + self.data[9])
-        z_neg_avg = 0.5 * (self.data[0] + self.data[1])
-
-        avg_data = {
-            "x+": x_pos_avg,
-            "x-": x_neg_avg,
-            "y+": y_pos_avg,
-            "y-": y_neg_avg,
-            "z+": z_pos_avg,
-            "z-": z_neg_avg
+        
+        range_minima = {
+            "A0": config.getint('settings', 'A0_min'),
+            "A1": config.getint('settings', 'A0_min'),
+            "A2": config.getint('settings', 'A0_min'),
+            "A3": config.getint('settings', 'A0_min'),
+            "A4": config.getint('settings', 'A0_min'),
+            "A5": config.getint('settings', 'A0_min'),
+            "A6": config.getint('settings', 'A0_min'),
+            "A7": config.getint('settings', 'A0_min'),
+            "A8": config.getint('settings', 'A0_min'),
+            "A9": config.getint('settings', 'A0_min'),
+            "A10": config.getint('settings', 'A0_min'),
+            "A11": config.getint('settings', 'A0_min')
         }
-
-        return avg_data
-
-    # Apply range calibration
+        
+        calibration_data = [ranges, range_minima]
+        return calibration_data
+    
+    # Apply range calibration for each sensor
     def calibrated(self):
-        calibration_ranges = self.ranges()
+        calibration_ranges = self.calibration()[0]
+        calibration_minima = self.calibration()[1]
 
         calibrated_data = {
-            "x+": self.averaged()["x+"]*(1023/calibration_ranges["x+"]),
-            "x-": self.averaged()["x-"]*(1023/calibration_ranges["x-"]),
-            "y+": self.averaged()["y+"]*(1023/calibration_ranges["y+"]),
-            "y-": self.averaged()["y-"]*(1023/calibration_ranges["y-"]),
-            "z+": self.averaged()["z+"]*(1023/calibration_ranges["z+"]),
-            "z-": self.averaged()["z-"]*(1023/calibration_ranges["z-"])
+            "A0": (self.data[0] - calibration_minima["A0"]) / calibration_ranges["A0"] * 1023,
+            "A1": (self.data[1] - calibration_minima["A1"]) / calibration_ranges["A1"] * 1023,
+            "A2": (self.data[2] - calibration_minima["A2"]) / calibration_ranges["A2"] * 1023,
+            "A3": (self.data[3] - calibration_minima["A3"]) / calibration_ranges["A3"] * 1023,
+            "A4": (self.data[4] - calibration_minima["A4"]) / calibration_ranges["A4"] * 1023,
+            "A5": (self.data[5] - calibration_minima["A5"]) / calibration_ranges["A5"] * 1023,
+            "A6": (self.data[6] - calibration_minima["A6"]) / calibration_ranges["A6"] * 1023,
+            "A7": (self.data[7] - calibration_minima["A7"]) / calibration_ranges["A7"] * 1023,
+            "A8": (self.data[8] - calibration_minima["A8"]) / calibration_ranges["A8"] * 1023,
+            "A9": (self.data[9] - calibration_minima["A9"]) / calibration_ranges["A9"] * 1023,
+            "A10": (self.data[10] - calibration_minima["A10"]) / calibration_ranges["A10"] * 1023,
+            "A11": (self.data[11] - calibration_minima["A11"]) / calibration_ranges["A11"] * 1023
         }
 
         return calibrated_data
 
+    # average sensor values and associate to correct face
+    def averaged(self):
+
+        avg_data = {
+            "x+": 0.5 * (self.calibrated()["A10"] + self.calibrated()["A11"]),
+            "x-": 0.5 * (self.calibrated()["A6"] + self.calibrated()["A7"]),
+            "y+": 0.5 * (self.calibrated()["A2"] + self.calibrated()["A3"]),
+            "y-": 0.5 * (self.calibrated()["A4"] + self.calibrated()["A5"]),
+            "z+": 0.5 * (self.calibrated()["A8"] + self.calibrated()["A9"]),
+            "z-": 0.5 * (self.calibrated()["A0"] + self.calibrated()["A1"])
+        }
+
+        return avg_data
+
     # Sort the data to return the three largest values and their corresponding face
     def sorted(self):
-        data_items = list(self.calibrated().items())
+        data_items = list(self.averaged().items())
         ordered_data = []
 
         # iterate through all data_items, add the maximum to ordered_data, and remove it from the data_items list
@@ -87,19 +109,21 @@ class Attitude:
         self.processed_data = processed_data
 
     # Read max calibration values
-    def max_values(self):
+    @staticmethod
+    def max_values():
         config = configparser.ConfigParser()
         config.read('calibration.ini')
 
+        # average of the max values of sensor pairs
         max_values = {
-            "x+": config.getint('settings', 'x_p_max'),
-            "x-": config.getint('settings', 'x_n_max'),
+            "x+": (config.getint('settings', 'A10_max') + config.getint('settings', 'A11_max')) / 2,
+            "x-": (config.getint('settings', 'A6_max') + config.getint('settings', 'A7_max')) / 2,
 
-            "y+": config.getint('settings', 'y_p_max'),
-            "y-": config.getint('settings', 'y_n_max'),
+            "y+": (config.getint('settings', 'A2_max') + config.getint('settings', 'A3_max')) / 2,
+            "y-": (config.getint('settings', 'A4_max') + config.getint('settings', 'A5_max')) / 2,
 
-            "z+": config.getint('settings', 'z_p_max'),
-            "z-": config.getint('settings', 'z_n_max')
+            "z+": (config.getint('settings', 'A8_max') + config.getint('settings', 'A9_max')) / 2,
+            "z-": (config.getint('settings', 'A0_max') + config.getint('settings', 'A1_max')) / 2
         }
 
         return max_values

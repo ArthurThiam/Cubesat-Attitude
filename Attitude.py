@@ -49,8 +49,8 @@ while running:
     sorted_data = measurement.sorted()
     incidence_data = Attitude(sorted_data).incidence_angles()
     print('Dominant incidence angles: ', incidence_data)
-
+    print('')
 
     listening = True
-    time.sleep(0.01)
+    time.sleep(1)
 
