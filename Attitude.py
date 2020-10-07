@@ -25,12 +25,18 @@ ser = serial.Serial(config.get('settings', 'com_port'), 9600)
 running = True
 listening = True
 
+# While attitude determination is required
 while running:
+
+    # Listen to serial port until dataset delimiter ',' is detected
     while listening:
         output = ser.readline()
         if output == b',\r\n':
+
+            # Dataset delimiter detected, run interrupt to determine attitude
             listening = False
 
+    # Read all sensor values from the serial port
     A0 = int(ser.readline())
     A1 = int(ser.readline())
     A2 = int(ser.readline())
@@ -44,9 +50,14 @@ while running:
     A10 = int(ser.readline())
     A11 = int(ser.readline())
 
+    # Save data into required format and instantiate Data class
     raw_data = [A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11]
     measurement = Data(raw_data)
+
+    # calibrate, average and sort data
     sorted_data = measurement.sorted()
+
+    # Request incidence angle by instantiating Attitude class
     incidence_data = Attitude(sorted_data).incidence_angles()
     print('Dominant incidence angles: ', incidence_data)
     print('')

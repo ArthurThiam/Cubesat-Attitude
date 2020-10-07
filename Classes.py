@@ -1,4 +1,4 @@
-from math import acos, pi
+from math import cos, acos, pi
 import configparser
 
 
@@ -142,3 +142,35 @@ class Attitude:
         ]
 
         return incidence_angles
+
+    # Method to derive unit vector from incidence angle data
+    def unit_vector(self):
+        incidence_data = self.incidence_angles()
+
+        # Initialize unit vector components
+        unit_component_1 = -1
+        unit_component_2 = -1
+        unit_component_3 = -1
+
+        # Loop through incidence angles and associate with unit vector components.
+        for i in incidence_data:
+            if i[0] == 'x+':
+                unit_component_1 = cos(i[1] * pi / 180)
+
+            elif i[0] == 'x-':
+                unit_component_1 = pi - cos(i[1] * pi / 180)
+
+            elif i[0] == 'y+':
+                unit_component_2 = cos(i[1] * pi / 180)
+
+            elif i[0] == 'y-':
+                unit_component_2 = pi - cos(i[1] * pi / 180)
+
+            elif i[0] == 'z+':
+                unit_component_3 = cos(i[1] * pi / 180)
+
+            elif i[0] == 'z-':
+                unit_component_3 = pi - cos(i[1] * pi / 180)
+
+        unit_vector = [unit_component_1, unit_component_2, unit_component_3]
+        return unit_vector
