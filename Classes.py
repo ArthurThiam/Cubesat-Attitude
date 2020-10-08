@@ -133,11 +133,11 @@ class Attitude:
         max_range_values = self.max_values()
 
         incidence_angles = [
-            (self.processed_data[0][0], 90 - acos(self.processed_data[0][1]/max_range_values[self.processed_data[0][0]])
+            (self.processed_data[0][0], acos(self.processed_data[0][1]/max_range_values[self.processed_data[0][0]])
              * 180 / pi),
-            (self.processed_data[1][0], 90 - acos(self.processed_data[1][1]/max_range_values[self.processed_data[1][0]])
+            (self.processed_data[1][0], acos(self.processed_data[1][1]/max_range_values[self.processed_data[1][0]])
              * 180 / pi),
-            (self.processed_data[2][0], 90 - acos(self.processed_data[2][1]/max_range_values[self.processed_data[2][0]])
+            (self.processed_data[2][0], acos(self.processed_data[2][1]/max_range_values[self.processed_data[2][0]])
              * 180 / pi)
         ]
 
@@ -158,19 +158,19 @@ class Attitude:
                 unit_component_1 = cos(i[1] * pi / 180)
 
             elif i[0] == 'x-':
-                unit_component_1 = pi - cos(i[1] * pi / 180)
+                unit_component_1 = cos(i[1] * pi / 180 - pi)
 
             elif i[0] == 'y+':
                 unit_component_2 = cos(i[1] * pi / 180)
 
             elif i[0] == 'y-':
-                unit_component_2 = pi - cos(i[1] * pi / 180)
+                unit_component_2 = cos(i[1] * pi / 180 - pi)
 
             elif i[0] == 'z+':
                 unit_component_3 = cos(i[1] * pi / 180)
 
             elif i[0] == 'z-':
-                unit_component_3 = pi - cos(i[1] * pi / 180)
+                unit_component_3 = cos(i[1] * pi / 180 - pi)
 
         unit_vector = [unit_component_1, unit_component_2, unit_component_3]
         return unit_vector

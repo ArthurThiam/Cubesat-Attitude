@@ -1,4 +1,5 @@
 from Classes import Data, Attitude
+from numpy.linalg import norm
 import configparser
 import serial
 import time
@@ -25,7 +26,7 @@ ser = serial.Serial(config.get('settings', 'com_port'), 9600)
 running = True
 listening = True
 counter = 0
-moving_average_period = 10
+moving_average_period = config.getint('settings', 'moving_average_period')
 stored_data = []
 
 # While attitude determination is required
@@ -61,7 +62,9 @@ while running:
     sorted_data = measurement.sorted()
 
     # Request incidence angle by instantiating Attitude class
-    sun_vector = Attitude(sorted_data).unit_vector()
+    attitude = Attitude(sorted_data)
+    incidence_angles = attitude.incidence_angles()
+    sun_vector = attitude.unit_vector()
 
     # Add data to temporary storage and move counter
     counter += 1
@@ -88,13 +91,17 @@ while running:
             summed_data[2] += i[2]
 
         # Add averages to the averaged sun vector
-        averaged_sun_vector = [(summed_data[0] / 10),
-                               (summed_data[1] / 10),
-                               (summed_data[2] / 10)
+        averaged_sun_vector = [(summed_data[0] / moving_average_period),
+                               (summed_data[1] / moving_average_period),
+                               (summed_data[2] / moving_average_period)
                                ]
 
-    print('Dominant incidence angles: ', averaged_sun_vector)
-    print('')
+    normalized_vector = averaged_sun_vector/norm(averaged_sun_vector)
+    #print('incidence angles: ', incidence_angles)
+    #print('Stored Data: ', stored_data)
+    #print('Sun vector: ', averaged_sun_vector)
+    print('Normalized sun vector: ', normalized_vector)
+    #print('')
 
     listening = True
     time.sleep(0.5)
