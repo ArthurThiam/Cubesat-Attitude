@@ -66,7 +66,7 @@ while running:
 
     # Request incidence angle by instantiating Attitude class
     attitude = Attitude(sorted_data)
-    sun_vector = attitude.unit_vector()
+    sun_vector = attitude.vector()
 
     # Add data to temporary storage and move counter
     counter += 1

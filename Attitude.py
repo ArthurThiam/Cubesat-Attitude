@@ -49,11 +49,9 @@ class Attitude:
 
         # Check how many 0 vectors there are:
         counter = 0
-        zero_indices = []   # list with indices of the 0 values that angles do not need to be calculated for
         for i in low_ldr_data:
             if i[1] == 0:
                 counter += 1
-                zero_indices.append(i[0])
 
 
         if counter == 0:
@@ -93,7 +91,7 @@ class Attitude:
         return incidence_angles
 
     # Method to derive unit vector from incidence angle data
-    def unit_vector(self):
+    def vector(self):
         incidence_data = self.incidence_angles()
         print('incidence_data: ', incidence_data)
 
@@ -121,9 +119,6 @@ class Attitude:
             elif i[0] == 'z-':
                 unit_component_3 = sin(i[1] * pi / 180 - pi)
 
-        # incidence data contains 1 value (= direct incidence)
-
-
-        unit_vector = [unit_component_1, unit_component_2, unit_component_3]
-        print('unit return: ', unit_vector)
-        return unit_vector
+        vector = [unit_component_1, unit_component_2, unit_component_3]
+        print('vector return: ', vector)
+        return vector

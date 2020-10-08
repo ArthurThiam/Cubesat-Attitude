@@ -16,4 +16,5 @@ Required modules:
 Calibration of each sensor should be performed before usage. The minimum values
 of each sensor correspond to the darkness read-out. The maximum values correspond to the
 values at 90° incidence angle, for the used light source, at a consistent light source distance.
-Calibration values can be adapted and saved in the 'calibration.ini' file.
+Calibration values can be adapted and saved in the 'calibration.ini' file. It is recommended to apply
+a + 20% margin to the sensor maximum and - 20% to the sensor minimum to avoid exceeding sensor ranges.
