@@ -57,10 +57,12 @@ while running:
 
     # Save data into required format and instantiate Data class
     raw_data = [A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11]
+    print('raw data: ', raw_data)
     measurement = Data(raw_data)
 
     # calibrate, average and sort data
     sorted_data = measurement.sorted()
+    print('calibrated data: ', sorted_data)
 
     # Request incidence angle by instantiating Attitude class
     attitude = Attitude(sorted_data)
@@ -101,4 +103,5 @@ while running:
 
     listening = True
     time.sleep(0.5)
+    print('')
 

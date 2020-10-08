@@ -1,4 +1,4 @@
-from math import cos, acos, pi
+from math import sin, asin, pi
 import configparser
 
 
@@ -27,49 +27,103 @@ class Attitude:
 
         return max_values
 
+    def remove_low_ldr(self):
+        config = configparser.ConfigParser()
+        config.read('calibration.ini')
+        data = self.processed_data
+        iterator = 0
+
+        # if readout value is too low, set value to 0
+        for i in data:
+            if i[1] < config.getint('settings', 'detection_threshold'):
+                data[iterator] = (i[0], 0)
+
+            iterator += 1
+
+        print('remove low ldr return: ', data)
+        return data
+
     # determine incidence angles for three dominant sides
     def incidence_angles(self):
-        max_range_values = self.max_values()
+        low_ldr_data = self.remove_low_ldr()
 
-        incidence_angles = [
-            (self.processed_data[0][0], acos(self.processed_data[0][1]/max_range_values[self.processed_data[0][0]])
-             * 180 / pi),
-            (self.processed_data[1][0], acos(self.processed_data[1][1]/max_range_values[self.processed_data[1][0]])
-             * 180 / pi),
-            (self.processed_data[2][0], acos(self.processed_data[2][1]/max_range_values[self.processed_data[2][0]])
-             * 180 / pi)
-        ]
+        # Check how many 0 vectors there are:
+        counter = 0
+        zero_indices = []   # list with indices of the 0 values that angles do not need to be calculated for
+        for i in low_ldr_data:
+            if i[1] == 0:
+                counter += 1
+                zero_indices.append(i[0])
+
+
+        if counter == 0:
+            incidence_angles = [
+                (low_ldr_data[0][0], asin(low_ldr_data[0][1]/1023)
+                 * 180 / pi),
+                (low_ldr_data[1][0], asin(low_ldr_data[1][1]/1023)
+                 * 180 / pi),
+                (low_ldr_data[2][0], asin(low_ldr_data[2][1]/1023)
+                 * 180 / pi)
+            ]
+
+        elif counter == 1:
+            incidence_angles = [
+                (low_ldr_data[0][0], asin(low_ldr_data[0][1] / 1023)
+                 * 180 / pi),
+                (low_ldr_data[1][0], asin(low_ldr_data[1][1] / 1023)
+                 * 180 / pi),
+                ('', 0)
+            ]
+
+        elif counter == 2:
+            incidence_angles = [
+                (low_ldr_data[0][0], asin(low_ldr_data[0][1] / 1023)
+                 * 180 / pi),
+                ('', 0),
+                ('', 0)
+            ]
+
+        else:
+            incidence_angles = [
+                ('', 0),
+                ('', 0),
+                ('', 0)
+            ]
 
         return incidence_angles
 
     # Method to derive unit vector from incidence angle data
     def unit_vector(self):
         incidence_data = self.incidence_angles()
+        print('incidence_data: ', incidence_data)
 
         # Initialize unit vector components
-        unit_component_1 = -1
-        unit_component_2 = -1
-        unit_component_3 = -1
+        unit_component_1 = 0
+        unit_component_2 = 0
+        unit_component_3 = 0
 
-        # Loop through incidence angles and associate with unit vector components.
         for i in incidence_data:
             if i[0] == 'x+':
-                unit_component_1 = cos(i[1] * pi / 180)
+                unit_component_1 = sin(i[1] * pi / 180)
 
             elif i[0] == 'x-':
-                unit_component_1 = cos(i[1] * pi / 180 - pi)
+                unit_component_1 = sin(i[1] * pi / 180 - pi)
 
             elif i[0] == 'y+':
-                unit_component_2 = cos(i[1] * pi / 180)
+                unit_component_2 = sin(i[1] * pi / 180)
 
             elif i[0] == 'y-':
-                unit_component_2 = cos(i[1] * pi / 180 - pi)
+                unit_component_2 = sin(i[1] * pi / 180 - pi)
 
             elif i[0] == 'z+':
-                unit_component_3 = cos(i[1] * pi / 180)
+                unit_component_3 = sin(i[1] * pi / 180)
 
             elif i[0] == 'z-':
-                unit_component_3 = cos(i[1] * pi / 180 - pi)
+                unit_component_3 = sin(i[1] * pi / 180 - pi)
+
+        # incidence data contains 1 value (= direct incidence)
+
 
         unit_vector = [unit_component_1, unit_component_2, unit_component_3]
+        print('unit return: ', unit_vector)
         return unit_vector
