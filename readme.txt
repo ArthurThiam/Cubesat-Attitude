@@ -7,6 +7,7 @@ reading out the serial port and determining the attitude.
 Required modules:
 
 - math
+- numpy
 - configparser
 - serial
 - time

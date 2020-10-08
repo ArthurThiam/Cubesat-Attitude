@@ -1,108 +1,75 @@
-from Classes import Data, Attitude
-from numpy.linalg import norm
+from math import cos, acos, pi
 import configparser
-import serial
-import time
 
 
-# Unit test
-def unit_test():
-    measurement = Data([900, 902, 0, 5, 880, 890, 950, 952, 1000, 1012, 20, 25])
+class Attitude:
 
-    # Return the averaged, calibrated and sorted dominant values
-    sorted_data = measurement.sorted()
-    print('Dominant Side Proccessed Data: ', sorted_data)
+    def __init__(self, processed_data):
+        self.processed_data = processed_data
 
-    # Return incidence angles for the three dominant sides
-    incidence_data = Attitude(sorted_data).incidence_angles()
-    print('Dominant Side Incidence Angles: ', incidence_data)
+    # Read max calibration values
+    @staticmethod
+    def max_values():
+        config = configparser.ConfigParser()
+        config.read('calibration.ini')
 
+        # average of the max values of sensor pairs
+        max_values = {
+            "x+": (config.getint('settings', 'A10_max') + config.getint('settings', 'A11_max')) / 2,
+            "x-": (config.getint('settings', 'A6_max') + config.getint('settings', 'A7_max')) / 2,
 
-# Communicate with serial port
-config = configparser.ConfigParser()
-config.read('calibration.ini')
-ser = serial.Serial(config.get('settings', 'com_port'), 9600)
+            "y+": (config.getint('settings', 'A2_max') + config.getint('settings', 'A3_max')) / 2,
+            "y-": (config.getint('settings', 'A4_max') + config.getint('settings', 'A5_max')) / 2,
 
-running = True
-listening = True
-counter = 0
-moving_average_period = config.getint('settings', 'moving_average_period')
-stored_data = []
+            "z+": (config.getint('settings', 'A8_max') + config.getint('settings', 'A9_max')) / 2,
+            "z-": (config.getint('settings', 'A0_max') + config.getint('settings', 'A1_max')) / 2
+        }
 
-# While attitude determination is required
-while running:
+        return max_values
 
-    # Listen to serial port until dataset delimiter ',' is detected
-    while listening:
-        output = ser.readline()
-        if output == b',\r\n':
+    # determine incidence angles for three dominant sides
+    def incidence_angles(self):
+        max_range_values = self.max_values()
 
-            # Dataset delimiter detected, run interrupt to determine attitude
-            listening = False
+        incidence_angles = [
+            (self.processed_data[0][0], acos(self.processed_data[0][1]/max_range_values[self.processed_data[0][0]])
+             * 180 / pi),
+            (self.processed_data[1][0], acos(self.processed_data[1][1]/max_range_values[self.processed_data[1][0]])
+             * 180 / pi),
+            (self.processed_data[2][0], acos(self.processed_data[2][1]/max_range_values[self.processed_data[2][0]])
+             * 180 / pi)
+        ]
 
-    # Read all sensor values from the serial port
-    A0 = int(ser.readline())
-    A1 = int(ser.readline())
-    A2 = int(ser.readline())
-    A3 = int(ser.readline())
-    A4 = int(ser.readline())
-    A5 = int(ser.readline())
-    A6 = int(ser.readline())
-    A7 = int(ser.readline())
-    A8 = int(ser.readline())
-    A9 = int(ser.readline())
-    A10 = int(ser.readline())
-    A11 = int(ser.readline())
+        return incidence_angles
 
-    # Save data into required format and instantiate Data class
-    raw_data = [A0, A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11]
-    measurement = Data(raw_data)
+    # Method to derive unit vector from incidence angle data
+    def unit_vector(self):
+        incidence_data = self.incidence_angles()
 
-    # calibrate, average and sort data
-    sorted_data = measurement.sorted()
+        # Initialize unit vector components
+        unit_component_1 = -1
+        unit_component_2 = -1
+        unit_component_3 = -1
 
-    # Request incidence angle by instantiating Attitude class
-    attitude = Attitude(sorted_data)
-    incidence_angles = attitude.incidence_angles()
-    sun_vector = attitude.unit_vector()
+        # Loop through incidence angles and associate with unit vector components.
+        for i in incidence_data:
+            if i[0] == 'x+':
+                unit_component_1 = cos(i[1] * pi / 180)
 
-    # Add data to temporary storage and move counter
-    counter += 1
+            elif i[0] == 'x-':
+                unit_component_1 = cos(i[1] * pi / 180 - pi)
 
-    if len(stored_data) < moving_average_period:
-        stored_data.append(sun_vector)
+            elif i[0] == 'y+':
+                unit_component_2 = cos(i[1] * pi / 180)
 
-    elif len(stored_data) >= moving_average_period:
-        stored_data.pop(0)                  # remove oldest value
-        stored_data.append(sun_vector)      # add newest value
+            elif i[0] == 'y-':
+                unit_component_2 = cos(i[1] * pi / 180 - pi)
 
-    # if counter is not yet above threshold, use singular value
-    if counter < moving_average_period:
-        averaged_sun_vector = stored_data[-1]
+            elif i[0] == 'z+':
+                unit_component_3 = cos(i[1] * pi / 180)
 
-    # if counter is above threshold, apply moving average
-    elif counter >= moving_average_period:
-        summed_data = [0, 0, 0]
+            elif i[0] == 'z-':
+                unit_component_3 = cos(i[1] * pi / 180 - pi)
 
-        # Sum all of the parameters and store them in summed_data
-        for i in stored_data:
-            summed_data[0] += i[0]
-            summed_data[1] += i[1]
-            summed_data[2] += i[2]
-
-        # Add averages to the averaged sun vector
-        averaged_sun_vector = [(summed_data[0] / moving_average_period),
-                               (summed_data[1] / moving_average_period),
-                               (summed_data[2] / moving_average_period)
-                               ]
-
-    normalized_vector = averaged_sun_vector/norm(averaged_sun_vector)
-    #print('incidence angles: ', incidence_angles)
-    #print('Stored Data: ', stored_data)
-    #print('Sun vector: ', averaged_sun_vector)
-    print('Normalized sun vector: ', normalized_vector)
-    #print('')
-
-    listening = True
-    time.sleep(0.5)
-
+        unit_vector = [unit_component_1, unit_component_2, unit_component_3]
+        return unit_vector
