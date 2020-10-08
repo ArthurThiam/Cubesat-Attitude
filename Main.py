@@ -64,7 +64,6 @@ while running:
 
     # Request incidence angle by instantiating Attitude class
     attitude = Attitude(sorted_data)
-    incidence_angles = attitude.incidence_angles()
     sun_vector = attitude.unit_vector()
 
     # Add data to temporary storage and move counter
@@ -98,11 +97,7 @@ while running:
                                ]
 
     normalized_vector = averaged_sun_vector/norm(averaged_sun_vector)
-    #print('incidence angles: ', incidence_angles)
-    #print('Stored Data: ', stored_data)
-    #print('Sun vector: ', averaged_sun_vector)
     print('Normalized sun vector: ', normalized_vector)
-    #print('')
 
     listening = True
     time.sleep(0.5)
