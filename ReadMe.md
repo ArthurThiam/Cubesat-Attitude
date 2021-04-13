@@ -12,7 +12,8 @@ Required Python modules:
 - time
 
 Note on sensor calibration:
-Calibration of each sensor should be performed before usage. The minimum values
+
+- Calibration of each sensor should be performed before usage. The minimum values
 of each sensor correspond to the darkness read-out. The maximum values correspond to the
 values at 90° incidence angle, for the used light source, at a consistent light source distance.
 Calibration values can be adapted and saved in the 'calibration.ini' file. It is recommended to apply
